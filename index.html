@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meanwhile Map</title>
+  <meta name="description" content="Browse historical events from Wikipedia and Wikidata on a period-correct OpenHistoricalMap.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%232f6fbf'/><circle cx='16' cy='13' r='5' fill='white'/><path d='M16 28 10 16h12z' fill='white'/></svg>">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+  <!-- Adds map.filterByDate(); must load after MapLibre. -->
+  <script src="https://cdn.jsdelivr.net/npm/@openhistoricalmap/maplibre-gl-dates@1.4.0/index.js"></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div id="map" role="application" aria-label="Map of historical events"></div>
+
+  <button id="info-open" class="panel info-btn" title="About Meanwhile Map" aria-label="About Meanwhile Map"
+    aria-haspopup="dialog">i</button>
+  <dialog id="info" class="panel" aria-labelledby="info-title">
+    <button id="info-close" class="icon-btn" title="Close" aria-label="Close">×</button>
+    <h2 id="info-title" tabindex="-1" autofocus>Meanwhile Map</h2>
+    <p class="lede">What was happening around the world at the same time? Pick a moment in history and see the
+      events, foundings and people from that period on a map with the borders of the day.</p>
+
+    <h3>How to use it</h3>
+    <ul>
+      <li><b>Pick a time:</b> drag the slider or type a year (CE/BCE), choose the starting month and a
+        <i>window</i> from 1 month to 100 years. ◀ ▶ (or Shift+←/→) step to the previous/next window.</li>
+      <li><b>Explore:</b> zoom and pan freely. Numbered circles are clusters; click to zoom in. Click a pin
+        for a summary and links to Wikipedia, Wikidata and OpenHistoricalMap.</li>
+      <li><b>Filter:</b> click a category to show or hide it, double-click to show only that one.
+        <i>Founded &amp; built</i> and <i>Births &amp; deaths</i> are off by default.</li>
+      <li><b>Pins:</b> solid = exact place, hollow = only the region or country is known, faded = already
+        under way when the window opens. "Sometime in 1452" means the date is only known to the year.</li>
+      <li><b>Share:</b> the address bar always holds the current view, so you can bookmark or send it.</li>
+    </ul>
+
+    <h3>How it works</h3>
+    <ul>
+      <li><b>Events</b> come live from <a href="https://www.wikidata.org/" target="_blank" rel="noopener">Wikidata</a>:
+        items with a date in the window, a location, and an article on some Wikipedia. They're ranked by how many
+        Wikipedias cover them, and the categories come from Wikidata's own classification.</li>
+      <li><b>The map</b> is <a href="https://www.openhistoricalmap.org/" target="_blank" rel="noopener">OpenHistoricalMap</a>,
+        filtered to the middle of the window so borders and place names match the period.</li>
+      <li><b>Summaries and images</b> come from Wikipedia. Images are shown only when freely licensed.</li>
+      <li>Everything runs in your browser against these open services; there's no backend of its own, so
+        results are only as complete as the open data: early periods and some regions are thin.</li>
+      <li><b>Privacy:</b> no cookies and no personal tracking. The site only counts anonymous visits
+        (Cloudflare Web Analytics). The years and places you explore stay in your address bar and are never
+        sent to us.</li>
+    </ul>
+    <p class="source">Meanwhile Map is open source: code, issues and ideas are welcome on
+      <a href="https://github.com/ea/meanwhilemap" target="_blank" rel="noopener">GitHub</a>.</p>
+    <p class="fine">Data: Wikidata (CC0) · Wikipedia text (CC BY-SA 4.0) · © OpenHistoricalMap and
+      OpenStreetMap contributors · land cover © ESA/UCLouvain (GlobCover). Map rendering by MapLibre GL JS.</p>
+  </dialog>
+
+  <aside id="list-panel" class="panel" aria-label="Events in view">
+    <div class="list-head">
+      <h2 id="list-title">Events in view</h2>
+      <button id="list-toggle" class="icon-btn" title="Hide list" aria-label="Hide list">×</button>
+    </div>
+    <ol id="event-list"></ol>
+  </aside>
+  <button id="list-open" class="panel pill" hidden>☰ Events</button>
+
+  <section id="controls" class="panel" aria-label="Time and filters">
+    <div class="time-row">
+      <button id="prev" class="icon-btn" title="Previous window (Shift+←)" aria-label="Previous window">◀</button>
+      <div class="when">
+        <div id="when-label">—</div>
+        <div id="basemap-label" class="muted"></div>
+      </div>
+      <button id="next" class="icon-btn" title="Next window (Shift+→)" aria-label="Next window">▶</button>
+      <button id="controls-toggle" class="icon-btn" aria-controls="controls-details" aria-expanded="true"
+        title="Hide settings" aria-label="Hide settings"><span class="chev" aria-hidden="true"></span></button>
+    </div>
+
+    <input type="range" id="year-slider" min="0" max="1000" step="1" aria-label="Year">
+    <div id="controls-details">
+    <div id="ticks" class="ticks muted" aria-hidden="true"></div>
+
+    <div class="fields">
+      <label>Year
+        <span class="year-combo">
+          <input type="number" id="year-input" min="1" max="3000" step="1">
+          <select id="era-input" aria-label="Era"><option value="CE">CE</option><option value="BCE">BCE</option></select>
+        </span>
+      </label>
+      <label>From <select id="month-input"></select></label>
+      <label>Window <select id="span-input"></select></label>
+      <label>Max events
+        <select id="limit-input">
+          <option>250</option><option>500</option><option selected>1000</option><option>2000</option><option>4000</option>
+        </select>
+      </label>
+      <label>Wikipedia
+        <select id="lang-input">
+          <option value="en">English</option><option value="de">Deutsch</option><option value="fr">Français</option>
+          <option value="es">Español</option><option value="it">Italiano</option><option value="pl">Polski</option>
+          <option value="ru">Русский</option><option value="uk">Українська</option><option value="sr">Српски</option>
+          <option value="pt">Português</option><option value="nl">Nederlands</option><option value="ja">日本語</option>
+          <option value="zh">中文</option>
+        </select>
+      </label>
+      <label class="check" title="Also show events that have no article on the selected Wikipedia, linking to another language's article">
+        <input type="checkbox" id="anywiki-input"> Include events from other Wikipedias
+      </label>
+      <label class="check" title="Also show events that began before the window and were still under way (not much longer than the window)">
+        <input type="checkbox" id="ongoing-input"> Include ongoing events
+      </label>
+      <label>Map labels
+        <select id="labels-input"></select>
+      </label>
+    </div>
+
+    <div id="categories" class="chips" role="group" aria-label="Categories"></div>
+    <div class="legend muted"><span class="pin"></span> exact location <span class="pin hollow"></span> approximate (region or country) <span class="pin faded"></span> ongoing</div>
+    </div>
+    <div id="status" class="muted" role="status" aria-live="polite"></div>
+  </section>
+</body>
+</html>
