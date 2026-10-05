@@ -8,7 +8,7 @@ When reading a history book, I sometimes have a hard time internalizing when the
 
 For example, yes, the Mughal Empire was founded by Babur in the 1520s, but it paints a different picture in my head when I see that this roughly coincides with Cortés' capture of Tenochtitlan, or that it's close to the Siege of Vienna. Example link: https://meanwhilemap.com/#y=1520&m=1&span=120&off=founded,people&map=1.4/25/0
 
-To play around with this, I've made Meanwhile Map. You select a date and a time window, then scroll around the world map to see a list of contemporaneous events.
+Meanwhile Map lets you select a date and a time window. You can then scroll around the world map to see a list of contemporaneous events.
 
 ## How it works
 
