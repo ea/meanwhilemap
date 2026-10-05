@@ -1,23 +1,12 @@
-# Meanwhile Map
+# [Meanwhile Map](https://www.meanwhilemap.com)
 
-Browse historical events on a period-correct world map. It is a static site
-with no build step and no backend: every query runs in the browser against
-open data services.
+Historical exploration map  showing contemporaneous events for the chosen year and time-frame. Open data, static web page, fully client-side. 
 
-Source: https://github.com/ea/meanwhilemap
+## Motivation 
 
-## Run locally
+When reading a history book, I sometimes have a hard time internalizing when the events are taking place. Sure, I know the dates, but it takes a bit of effort to put them in a broader context, to understand where in history they belong. What usually helps is to put them in relation to other contemporaneous events.
 
-```sh
-python3 serve.py          # serves on all interfaces, port 8765, and prints the LAN URL
-python3 serve.py 8080 127.0.0.1   # or pick a port / bind address
-```
-
-`serve.py` is `python3 -m http.server` plus a `Cache-Control: no-cache` header,
-so browsers (Safari especially) always pick up edited scripts instead of mixing
-cached and new files.
-
-(ES modules need to be served over HTTP. Opening `index.html` as a file won't work.)
+To play around with this, I've made Meanwhile Map. You select a date and a time window, then scroll around the world map to see a list of contemporaneous events.
 
 ## How it works
 
@@ -78,13 +67,6 @@ service's 60-second limit.
 | Land cover raster (GlobCover) | © ESA 2010 & UCLouvain, **educational/scientific use only** | map credit line. Hide the `ohm_landcover_hillshade` layer for commercial use |
 | MapLibre GL JS | BSD-3-Clause | loaded from a CDN |
 
-## Ideas / next steps
-
-- Rate-limit handling: retry after HTTP 429 using `Retry-After`, cache results for a day
-- A timeline histogram under the slider showing event density
-- Play/animate through time
-- Search box (jump to an event or place)
-- Collapsible controls panel on mobile
 
 ## License
 
